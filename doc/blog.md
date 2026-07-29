@@ -35,6 +35,6 @@ C++文件的扩展名为.cpp,每个C++程序中有且只有一个main()的主函数
 ---  
   ## 2数据类型  
   ### 2.1整形  
-  ![asset.png](assets/屏幕截图 2026-07-29 210817.png)
+  ![asset.png](assets/blog01.png)
 
 
