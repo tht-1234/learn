@@ -1,0 +1,7 @@
+# VS缓存文件夹（解决Permission denied报错）
+.vs/
+*.vsidx
+
+# 系统无关文件
+.DS_Store
+Thumbs.db
