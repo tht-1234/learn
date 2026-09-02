@@ -1132,3 +1132,721 @@ int main() {
 ```  
 ### 13.2友元类    
 
+在类中可以用friend来声明另外一个类是当前类的友元类，这么一来在另外一个类中就可以
+访问当前类的成员。  
+```cpp
+class Student1{
+friend class Student2;
+
+private:
+	int num;
+public:
+	int getAge(Student& s){
+		num=10;
+		cout<<num<<endl;
+		return num;
+	}
+};
+
+class Student2{
+public:
+	int get1Age(Student1& s){
+		cout<<s.num<<endl;
+		return s.num;
+	}
+};
+```  
+注意：我们也可以声明指定类中的指定函数为友元函数，那么只有该函数才可以访问
+另外一个类中的private成员。
+友元类没有反向性（我可以访问你但是你不可以访问我）
+友元类没有传递性（你的好朋友不一定是我的好朋友)  
+  
+## 14运算符重载  
+C++中的运算符重载是一种特殊的多态，允许程序员为自定义类型（结构体，类）
+重新定义现有运算符的行为。  
+基本格式：  
+```cpp
+返回值 operator运算符（参数）
+```
+### 14.1成员函数重载 
+比如`+`重载：  
+```cpp
+class Person{
+public:
+	int age;
+	Person(int age):age(age){}
+
+	//成员函数重载  
+	Person operator(const Person& p2){
+		Person temp(this->age+p2.age);
+		return temp;
+	}
+
+}
+
+int main(){
+	Person p1(10);
+	Person p2(20);
+	person s3=p1+p2;//等价于p1.operator+（p2)
+	cout<<p3.age<<endl;
+	return 0;
+}
+```  
+### 14.2全局函数实现运算符重载（写在类外）  
+格式：  
+```cpp  
+返回值 operator运算符（做操作数，有操作数）
+```  
+>两个操作数都是显式参数，没有this指针。  
+ 如果要访问类的私有成员，需要声明为friend友元。  
+ ```cpp
+ class Person{
+ private:
+	int age;
+public:
+	Person(int age):age(age){}
+	//声明友元，全局函数可以访问私有
+	friend Person operator+(const Person& p1,const Person& p2);
+ };
+
+ Person operator+（const Person& p1,const Person& p2){
+	Person temp=(p1.age+p2.age);
+	return temp;  
+	}
+
+int main(){
+	Person p1(10),p2(20);
+	Person p3=p1+p2;
+	//等价于Person P3=operator(p1,p2);
+}
+ 
+```
+   
+### 14.3几个常用重载  
+#### 14.3.1+重载  
+上面例子已经讲过不再赘述。  
+#### 14.3.2<<重载  
+>重载<<输出运算符（必须为全局函数，不可以是成员）  
+`cout<<对象`，`cout`是ostream对象，左操作数是cout,不是你的类对象，所以绝不可以是成成员函数。  
+```cpp
+class Person{
+pprivate：
+	int age;
+public:
+	Person(int age):age(age){}
+	friend ostream& operator<<(ostream& os,const Person& p);
+};
+
+//返回引用，支持链式输出cout<<p1<<p2
+ostream& operator<<(ostream& os,const Person& p){
+	os<<p.age;
+	return os;
+}
+
+int main(){
+	Person p(20);
+	cout<<p<<endl;
+	return 0;
+}
+```  
+#### 14.3.3++重载  
+++前置重载：无参数，返回引用    
+++后置重载：多加一个int占位参数，返回值对象
+```cpp
+class A
+{
+public:
+	int num;
+	A(int num):num(num){}
+	//前置
+	A& operator++(){
+		num++;
+		return *this;
+	}
+	//后置 
+	A operator++(int){
+		A temp=*this;
+		num++;
+		return temp;
+	}
+};
+```  
+ 为什么这里前置与后置的返回类型不同呢？我们知道，前置运算是
+ 先对自身进行数值变化在代入计算，后置是先代入计算在对自身
+ 数值进行改变。所以前者返回引用（即自身）不会影响计算，后者，
+ 代入计算时不是数值改变后的值所以要拷贝一个备份来存放原值。  
+ #### 14.3.4()重载
+ 将对象当函数来调用。
+ 注意：`operator()`只能用成员函数重载，不能全局/友元重载；返回值，参数个数随便；不会改变（）本来的调用语法。  
+ 最大特点：对象可以存状态。  
+ ```cpp
+ #include <iostream>
+ uisngnamespace std;
+
+ class Mult{
+ private:
+	int base;
+public:
+	Mult(int b):baes(b){}
+	int operator()(int x){
+		return x*base;
+	}
+  };
+
+  int main(){
+	Mult time2(2);//base=2
+	Mult tim5(5);//baes=5
+
+	cout<<timw2(5);//x=5,base=2,输出10
+	cout<<time5(2)//x=2,base=5,输出10
+  }
+ ```
+ ## 15继承  
+ 只要“什么是一种什么”可以说得通，那么这两个类之间就存继承关系，子类继承父类，子类自动拥有父类所有成员与成员函数
+ ，除了静态成员。
+ 意义：在面向对象编程中，可以通过继承来减少代码冗余，将大量复用代码写在父类中。
+ ### 15.1继承的实现  
+ ```cpp
+ class 派生类名:[继承方式]基类名{}  
+ ```
+ 继承方式有三种`public` `private` `protected`  
+ `public`：公有继承。父类中public成员在子类中还是public；projected在子类中还是projected;父类中的private子类不可以访问。  
+ `projected`：受保护继承，父类中的public在子类中变为projected,父类中的private子类不可以访问；  
+ `private`:私有继承，父类中的public,projected变为private,父类中的private不可以访问。  
+ 由此可见，子类不会继承父类私有成员。  
+ 
+ ### 15.2继承中的构造函数与析构函数  
+ 父类中的构造函数与析构函数和拷贝函数不可以被继承。  
+ #### 15.2.1构造函数与析构函数的执行顺序  
+ 继承关系如下：  
+ 子类对象创建时会先创建父类对象（先调用父类构造函数）   
+ 父类构造函数执行完后才会执行子类的构造函数  
+ 析构函数执行顺序相反  
+ #### 15.2.3子类中调用父类构造函数   
+ 当父类中有有参构造函数的时候，子类在创建构造函数的时候除了
+ 用之前讲的几种方法外，还可在参数列表中调用父类构造函数。  
+ ```cpp  
+ class Father{
+public:  
+	string name;
+	Father(){}
+	Father(string name):name(name){}
+
+ };
+
+ class Son :public Father {
+public:
+	int age;
+	Son(string name, int age) :Father(name), age(age) {}//初始化可以包含父类构造函数
+};
+
+void test10() {
+	Son s1("Tim", 10);
+
+	cout << s1.name << endl;
+	cout << s1.age << endl;
+
+}
+ ```  
+ ### 15.3继承中子类父类出现同名成员  
+如果子类在中某个成员名字与父类中的某个相同，那么子类会默认访问
+自己的成员（就近原则）；  
+如果想访问父类中的可以通过`父类类名::成员名`。  
+```cpp
+class Father {
+
+public:
+	string name;
+	int age=20;
+
+	Father() {}
+	Father(string name) :name(name) {}
+
+};
+
+class Son :public Father {
+public:
+	int age=10;
+	void myage() {
+		cout << age << endl;//子类age
+	}
+	void myfatherage() {
+		cout << Father::age << endl;//父类age
+	}
+	/*Son(string name, int age) :Father(name), age(age) {}*/
+};
+
+void test11() {
+	
+	Son s1;
+	
+	s1.myage();
+	s1.myfatherage();
+	cout << s1.age << endl;//子类age
+	cout << s1.Father::age << endl;//父类age
+}
+```  
+### 15.4多继承  
+C++语言允许多继承（一个子类继承多个父类）  
+格式：  
+```cpp
+class 子类类名：继承方式 父类1，继承方式 父类2，...{
+	....
+}
+```  
+具体用法与上面一样。  
+#### 15.5.1多继承中的二义性问题  
+两个或多个父类中有有同名成员，那么子类在访问的时候就会产生二义性
+不知道访问谁。  
+如何解决？ `::`还是用这个符号（作用域标识符）。  
+```cpp  
+class Base1 {
+protected:
+	int age;
+public:
+	Base1(int age) :age(age) {}
+	void fun() {
+		cout << this->age << endl;
+	}
+
+};
+
+class Base2 {
+protected:
+	int age;
+public:
+	Base2(int age) :age(age) {}
+	void fun() {
+		cout << this->age << endl;
+	}
+
+};
+
+class My :public Base1,public Base2{
+public:
+	My() :Base1(20), Base2(30) {}
+	void show(){
+		Base1::fun();//base1中的fun()
+		Base2::fun();//base2中的fun()
+	}
+};
+void test12() {
+	My m1;
+	m1.show();
+}
+```  
+#### 15.5.2菱形继承，虚继承  
+菱形继承问题：一个基类（父类）有两个派生类（子类），又有一个
+子类同时继承了上面两个派生类，这就叫*菱形继承*。而这会导致基类中
+成员会在最终的子类中产生多个副本，使得数据冗余，产生二义性。  
+ ![asset.png](../assets/blog17.png)   
+ ```cpp
+ class BigBase {
+public:
+	BigBase() {
+		cout << "BigBase构造函数" << endl;
+	}
+	void fun() {
+		cout << "Bigbase::fun()" << endl;
+	}
+};
+
+class Base3:public BigBase {
+public:
+	Base3() {
+		cout<<"Base3构造函数"<<endl;
+	}
+};
+class Base4 :public BigBase {
+public:
+	Base4() {
+		cout << "Base4构造函数" << endl;
+	}
+};
+
+class Sub :public Base3,public Base4 {
+public:
+	Sub() {
+		cout << "Sub构造函数" << endl;
+	}
+};
+
+void test13() {
+	Sub s;
+}
+ ```
+  输出结果：
+![asset.png](../assets/blog18.png)    
+会发现BigBase的构造函数重复使用，产生冗余。  
+解决办法：  
+将`class Base3:public BigBase`加上`virtual`为`class Base3:virtual public BigBase`。  
+`base4`的继承方式也是一样的修改。  
+再运行程序：  
+![asset.png](../assets/blog19.png)   
+## 16多态  
+### 16.1什么是多态  
+C++中的多态是指程序在编译或运行时能够根据参数的数据类型或者
+对象的实际类型调用相应的函数。
+
+静态多态  
+C++中的多态分为：静态多态（编译时多态）、动态多态（运行时多态）。  
+**重载**是静态多态，包含运算符重载，函数重载，模板；  
+动态多态  
+依赖虚函数和继承机制来实现。多态发生在运行期间，基于对象的实际
+类型来决定调用声明函数。  
+  
+### 16.2虚函数  
+虚函数是基类中用`virtual`声明的函数，使派生类可以对这个函数重写。
+通过基类指针或引用调用函数时，实际执行的是具体对象的函数。  
+格式：  
+```cpp 
+virtual 函数名（）{...}
+```  
+#### 16.2.1子类重写父类的虚函数  
+只可以重写父类中virtual修饰的函数，并且子类与父类中的函数声明要一样。  
+```cpp
+class Animal {
+public:
+	virtual void eat() {
+		cout << "吃" << endl;
+	}
+};
+
+class Cat:public Animal {
+public:
+	void eat() {
+		cout << "吃鱼" << endl;
+	}
+};
+class Dog :public Animal {
+public:
+	void eat() {
+		cout << "吃骨头" << endl;
+	}
+};
+
+void test14() {
+	Animla a;
+	Cat c;
+	Dog d;
+
+	a.eat();
+	c.eat();
+	d.eat();
+}
+```
+![asset.png](../assets/blog20.png)     
+#### 16.2.2动态绑定  
+在C++中实现多态的方式是，定义基类的对象的指针或引用，指向子类对象，程序在运行时多态绑定，即同一指针或引用类型，使用不同的实例而执行不同的操作。  
+```cpp
+class Animal {
+public:
+	virtual void eat() {
+		cout << "吃" << endl;
+	}
+};
+
+class Cat:public Animal {
+public:
+	void eat() {
+		cout << "吃鱼" << endl;
+	}
+};
+class Dog :public Animal {
+public:
+	void eat() {
+		cout << "吃骨头" << endl;
+	}
+};
+
+void test14() {
+	Animal* dog = new Dog();
+	Animal* cat = new Cat();
+
+	dog->eat();
+	cat->eat();
+}
+
+```  
+输出与上面一样。  
+
+### 16.3抽象类  
+含有纯虚函数的类，抽象类不可以实例化，只可以作为基类使用。  
+目的：为了确保派生类实现某些特定功能提供了一种规范接口，增加了设计的灵活性。  
+#### 16.3.1虚函数  
+只在类中做单纯声明。
+格式：  
+```cpp
+virtual void 函数名()=0;//纯虚函数
+```  
+注意:子类继承抽象类必须重写虚函数，否则子类也是抽象类。  
+### 16.4虚析构函数  
+在继承中，父类要提供虚析构函数，确保多态场景下正确销毁对象。否则在父类
+对象生命周期结束时不会自动调用子类的析构函数。  
+（我们之前举的例子都没提到虚析构函数，因为那些对象都是创建在栈上的。这里讨论的都是`new`出来的，堆中内存释放要手动）  
+```cpp
+class Animal {
+public:
+	virtual void eat() {
+		cout << "吃" << endl;
+	}
+	virtual ~ Animal() {
+		cout << "Animal析构" << endl;
+	};
+};
+
+class Cat:public Animal {
+public:
+	void eat() {
+		cout << "吃鱼" << endl;
+	}
+	~Cat() {
+		cout << "Cat析构" << endl;
+	}
+};
+class Dog :public Animal {
+public:
+	void eat() {
+		cout << "吃骨头" << endl;
+	}
+	~Dog() {
+		cout << "Dog析构" << endl;
+	}
+};
+
+void test14() {
+	Animal* dog = new Dog();
+	Animal* cat = new Cat();
+
+	dog->eat();
+	cat->eat();
+
+//手动释放堆空间
+	delete dog;
+	delete cat;
+}
+```  
+![asset.png](../assets/blog21.png)    
+分析：`Animal* dog`是在栈中创建了一个Animal类型的指针结束时会自动
+销毁，但堆中的开辟的一个存放Dog类型的空间要手动`delete`，之后才会调用自己
+的虚构函数。虽然说`dog`指向的是`Animal`类型的地址，但由于父类的
+析构函数被`virtual`修饰，所以实际上`delete dog`调用的是其实际类型
+（即`Dog`）的析构函数。  
+总结：我们可以将`virtual`的作用看似为透过现象看本质。它回去调用实际类型的相应函数
+。  
+  
+## 17IO流  
+ C++中I/O标准类定义在iostream,fstream,stringstream3个头文件中，对应的是
+ **标准I/O流，文件I/O流，字符I/O流**。  
+ 各头文件包含的常用类如下：  
+
+进行标准I/O操作时使用 iostream 头文件，它包含ios、iostream、istream、ostream等类  
+
+进行文件I/O操作时使用 fstream 头文件，它包含fstream、ifstream、ofstream和fstreambase等
+类  
+
+进行串I/O操作时使用 sstream 头文件，它包含istringstream、ostringstream、stringstream等类
+   
+继承关系图：
+![asset.png](../assets/blog22.png)    
+### 17.1 ifstream流  
+C++标准库中定义的一个类，从文件中读取数据。他是istream的派生类。
+  
+#### 17.1.1打开文件   
+##### 17.1.1.1 首先包含头文件  
+```cpp
+#include <fstream>
+```  
+##### 17.1.1.2 构造函数（创建对象）  
+```cpp
+ifstream file("example.txt");
+```  
+##### 17.1.1.3 open()函数  
+先创建对象，然后使用`open()`函数指定文件路径。  
+```cpp
+ifstream file;
+file.open("example.txt");
+```  
+##### 17.1.1.4检查状态  
+`fail()` 成员函数用来检查流是否处于失败状态，这包括读取或写入错误、格式匹配错误等情况。如果
+之前的操作导致流进入失败状态（比如文件打开失败，或者读写操作遇到不可恢复的错误），则 `fail()`
+将返回 `true` 。此检查广泛用于确定是否出现了任何类型的错误。
+```cpp
+int main(){
+	ifstream file("example.txt");
+	if(file.fail()){
+		cerr<<"无法打开文件"<<endl;
+		return 0;
+	}
+}
+```  
+#### 17.1.2 读取数据  
+##### 17.1.2.1 字符读取  
+`get(..)`读取一个字符。  
+```cpp
+char ch;
+file.get(ch);
+cout<<ch<<endl;
+```  
+如果成功读取到字符，该字符会存储到`ch`中。  
+循环读取文件中的字符：  
+```cpp
+char ch;
+while(file.get(ch)){
+	cout<<ch;
+}
+```  
+##### 17.1.2.2 读取一行  
+`getline()`这个函数来自<string>头文件，专门来处理`string类型`。  
+  
+函数原型如下：
+```cpp
+std::istream& getline(std::istream& is, std::string& str, char delim = '\n'); 
+```  
+ `istream& is`:返回流引用（即调用这个函数的对象）；  
+ `string& str`:将读取到的文本存到这个字符串当中；  
+ `char delim = '\n'`:每一次读到换行符停止（即每一次读一行）；  
+ #### 17.1.2 提取运算符（>>）  
+ 用于输入操作，从流中提取数据存到变量中。此外，提取运算符可以连续使用，从流中顺序读取多个数据。  
+ ```cpp  
+ ifstream file("example.txt");
+ int number；
+ double decimal;
+ file>>number>>decimal;  
+ ```  
+ 注意：`>>`会自动跳过空格，换行等空白；如果连续提取（如例子中）它遵从从左向右读取，先读到`number`,再读到`decimal`，
+ 并且要求文本中的数据类型、顺序要与你存入变量的顺序原值。  
+ 比如：文本中是“10 2.1”此时可以与`file>>number>>decimal;`相对应，成功读取。如果是“2.1 10”，与存入的变量类型不是一一对应。则失败。   
+ #### 17.1.3 关闭流  
+ 显示关闭  
+ `file.close();`  
+ 自动关闭  
+ 当`ifstream`对象离开作用域时，流会自动关闭  
+ ### 17.2 ofstream流  
+ `ofstream`类，是`ostream`的派生类，将数据写入到文件中。  
+ #### 17.2.1 创建流对象  
+ 创建一个`ofstream`类对象。  
+ ```cpp 
+ ofsftream file("file.txt");
+ ```  
+ #### 17.2.2 检查状态  
+ 使用`is_open()`来检查文件是否打开成功。  
+ ```cpp 
+ if（！file.open()){
+	cerr<<"文件打开失败"<<endl;
+	return 0;
+ }
+ ```  
+ #### 17.2.3 写数据  
+ 使用`<<`向文件中写入各种类型的数据。  
+ ```cpp
+ int main(){
+	ofstream file;
+	file.open("example.txt");
+	if(!file.is_open()){
+		cout<<"打开失败"<<endl;
+	}else{
+		file<<"hello world\n";
+		file<<100<<endl;
+	}
+	file.close();
+	return 0;
+ }
+ ```  
+ #### 17.2.4 关闭文件  
+ `file.close();`  
+#### 17.2.5 文件模式  
+`void open(const char *file,ios::openmode mode);`  
+默认以覆盖模式打开文件，如果需要追加内容而不是覆盖，可以在打开文件时设置相应模式。  
+打开方式在ios类中定义  
+![asset.png](../assets/blog23.png)    
+如果想将上述方式结合使用，可以用运算符`|`连接。  
+`ios::in|ios::out`,以读写方式打开文件，文件可读可写。  
+#### 17.2.6文件复制  
+同时使用`ifstream  ofstream`实现文件复制。    
+```cpp  
+int main(){
+	ifstream in("D:/a.txt");  
+	ofstream out("D:/b.txt");
+	if(!in.fail()){
+		char ch;
+		while(in.get(ch)){
+			out<<ch;
+		}
+	}else{
+		cout<<"文件打开失败"<<endl;
+	}
+
+	out.close();
+	in.close();
+	return 0;
+}
+```  
+注意：在之前的例子中，我们打开某个文件的时候都是`("a.txt")`
+括号里面写的是你要打开的文件路径，这种写法表示**相对路径**
+表示与你创建的源文件在同一个目录下。上面例子中的`("D:/a.txt")`
+是**绝对路径**表示这个文件在电脑中的实际位置。  
+在打开文件操作中，如果那个文件不存在，系统会自动帮我们创建。  
+在文件操作中，如果文件路径的分割符号是\，我们要用\\或/。在window操作系统下会将\转成/,但在其他一些平台上只支持/，我们提倡/。  
+  
+## 18 异常  
+### 18.1 什么是异常  
+异常是程序在执行过程中出现的预期之外的情况或错误，导致程序运行终止  
+  
+C++的异常处理有三个关键字  
+1)`try`将可能出现问题的代码块包裹起来；
+2)`throw`如果包裹起来的代码块出现了异常，就会通过`throw`抛出异常；  
+3)`catch`用来接收抛出的异常，执行与抛出异常相对应的代码块；  
+```cpp
+#include<iostream>
+using namespace std;
+
+
+void test1() {
+	try {
+		int a = 6;
+		int b = 0;
+		if (b == 0) {
+			throw "除数不可以为0";
+		}
+		int res = a / b;
+
+		cout << res << endl;
+	}
+
+	catch (const char* error) {
+		cout << error << endl;
+	}
+}
+
+int main() {
+	 test1();
+	return 0;
+}
+```  
+![asset.png](../assets/blog24.png)   
+`catch`的类型要与`throw`相同，意味着`throw,catch`可以写好几个，这与`switch case`很像。  
+当代码中发生`throw`后就不会再执行`throw`后面的代码。  
+### 18.2 标准异常    
+C++中定义了各种预置的异常类，其中`exception`是所有标准异常类的基类，捕获此类就可以捕获其他类型的异常。  
+`excption`定义在`<exceptio>`头文件中。它的子类定义在`<stdexcept>`中。
+![asset.png](../assets/blog25.png)   
+![asset.png](../assets/blog26.png)   
+![asset.png](../assets/blog27.png)   
+
+### 18.3声明异常  
+声明异常是指在函数接口中指定该函数可能抛出的异常类型。  
+语法：  
+在函数声明或定义处，紧跟函数之后，使用`throw`关键字和一对圆括号罗列出可能的异常类型列表。如果函数不抛出异常，可以声明为`throw()`（在C++及以后的版本中，推荐使用`noexcept`代替）  
+```cpp
+//声明可能抛出类型的异常(C++11之前)
+void function1() throw(std::exception,std::bad_alloc);
+//声明不抛出任何类型异常（C++11之前）
+void function2() throw();
+//使用noexcept声明不抛出如何类型异常（C++11及以后）
+void function3() noexcept;
+//使用noexcept声明抛出如何异常（C++11及以后）
+void function4() noexcept(false);
+```  
+### 18.4自定义异常  
+  
